@@ -1,0 +1,14 @@
+[package]
+name = "mytokenizers"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+macross = { workspace = true }
+tokenizers = { workspace = true }
+candle-core = { workspace = true }
+
+[features]
+default = []
+metal = ["candle-core/metal"]

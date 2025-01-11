@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["clean-data", "data", "import-wine", "little-wine", "meilli-search", "search-wine"]
+members = ["clean-data", "data", "import-wine", "little-wine", "meilli-search", "mytokenizers", "qwen", "search-wine"]
 
 [workspace.dependencies]
 serde = "1.0.217"
