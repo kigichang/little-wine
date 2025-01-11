@@ -1,0 +1,15 @@
+[package]
+name = "mymodel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+candle-core = { workspace = true }
+candle-nn = { workspace = true }
+candle-transformers = { workspace = true }
+macross = { workspace = true }
+
+[features]
+default = []
+metal = ["candle-core/metal", "candle-transformers/metal", "candle-nn/metal"]

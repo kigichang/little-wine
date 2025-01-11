@@ -1,5 +1,5 @@
 use anyhow::{Error as E, Result};
-use candle_core::IndexOp;
+use candle_core::{DType, IndexOp};
 use macross::AutoModel;
 
 fn main() -> Result<()> {
@@ -33,11 +33,14 @@ fn main() -> Result<()> {
             candle_core::DType::F32,
             &device,
         )?;
+        // let model =
+        //     mymodel::AutoXLMRobertaModel::from_pretrained((MODLE_NAME, true), DType::F32, &device)?;
 
         let question_embedding = {
             let (ids, type_ids, attention_masks) =
                 mytokenizers::encode_batch(&tokenizer, vec![question.clone()], &device)?;
             let embeddings = model.forward(&ids, &type_ids, &attention_masks)?;
+            // let embeddings = model.forward(&ids, &attention_masks, &type_ids, None, None, None)?;
             macross::normalize(&embeddings.i((.., 0))?.contiguous()?)?
         };
         println!("question embedding:{:?}", question_embedding.shape());
@@ -46,6 +49,7 @@ fn main() -> Result<()> {
         let (ids, type_ids, attention_masks) =
             mytokenizers::encode_batch(&tokenizer, data.clone(), &device)?;
         let embeddings = model.forward(&ids, &type_ids, &attention_masks)?;
+        // let embeddings = model.forward(&ids, &attention_masks, &type_ids, None, None, None)?;
         let embeddings = embeddings.i((.., 0))?.contiguous()?;
         let embeddings = macross::normalize(&embeddings)?;
         println!("data embeddings:{:?}", embeddings.shape());
@@ -67,7 +71,10 @@ fn main() -> Result<()> {
         .iter()
         .take(5)
         .map(|(i, s)| {
-            println!("score: {s}, idx: {i}, name: {}", lst[*i].profile.name);
+            println!(
+                "{i:.6} {s:>3} {:>4} {} {}",
+                lst[*i].profile.price, lst[*i].profile.name, lst[*i].profile.note
+            );
             lst[*i].profile.clone()
         })
         .collect::<Vec<_>>();

@@ -20,13 +20,7 @@ async fn main() -> Result<()> {
     let wines: Vec<data::Wine> = serde_json::from_reader(wines)?;
     let wine_profiles = wines
         .iter()
-        .map(|wine| {
-            serde_json::to_string(&wine.profile).map_err(E::msg)
-            // let mut profile = Vec::new();
-            // serde_json::to_writer(&mut profile, &wine.profile)
-            //     .map(|_| String::from_utf8_lossy(&profile).to_string())
-            //     .map_err(E::msg)
-        })
+        .map(|wine| serde_json::to_string(&wine.profile).map_err(E::msg))
         .collect::<Result<Vec<String>>>()?;
 
     // for wine in wine_profiles {
@@ -36,48 +30,55 @@ async fn main() -> Result<()> {
     let device = macross::device(false)?;
     const MODLE_NAME: &str = "BAAI/bge-m3";
 
-    let tokenizer: tokenizers::Tokenizer = {
-        let mut tokenizer = AutoTokenizer::from_pretrained(MODLE_NAME)
-            .map_err(E::msg)?
-            .into_inner();
-        let padding = tokenizers::PaddingParams::default();
-        let truncation = tokenizers::TruncationParams::default();
-        let tokenizer = tokenizer.with_padding(Some(padding));
-        let tokenizer = tokenizer
-            .with_truncation(Some(truncation))
-            .map_err(E::msg)?;
-        tokenizers::Tokenizer::from(tokenizer.to_owned())
-    };
+    // let tokenizer: tokenizers::Tokenizer = {
+    //     let mut tokenizer = AutoTokenizer::from_pretrained(MODLE_NAME)
+    //         .map_err(E::msg)?
+    //         .into_inner();
+    //     let padding = tokenizers::PaddingParams::default();
+    //     let truncation = tokenizers::TruncationParams::default();
+    //     let tokenizer = tokenizer.with_padding(Some(padding));
+    //     let tokenizer = tokenizer
+    //         .with_truncation(Some(truncation))
+    //         .map_err(E::msg)?;
+    //     tokenizers::Tokenizer::from(tokenizer.to_owned())
+    // };
+
+    let tokenizer = mytokenizers::tokenizer(MODLE_NAME)?;
+    let (input_ids, type_ids, attention_masks) =
+        mytokenizers::encode_batch(&tokenizer, wine_profiles.clone(), &device)?;
+    // let encoded_inputs = tokenizer
+    //     .encode_batch(wine_profiles.clone(), true)
+    //     .map_err(E::msg)?;
+
+    // let input_ids = encoded_inputs
+    //     .iter()
+    //     .map(|input| Tensor::new(input.get_ids(), &device))
+    //     .collect::<candle_core::Result<Vec<_>>>()?;
+    // let input_ids = Tensor::stack(&input_ids, 0)?;
+
+    // let type_ids = encoded_inputs
+    //     .iter()
+    //     .map(|input| Tensor::new(input.get_type_ids(), &device))
+    //     .collect::<candle_core::Result<Vec<_>>>()?;
+    // let type_ids = Tensor::stack(&type_ids, 0)?;
+
+    // let attention_masks = encoded_inputs
+    //     .iter()
+    //     .map(|input| Tensor::new(input.get_attention_mask(), &device))
+    //     .collect::<candle_core::Result<Vec<_>>>()?;
+    // let attention_masks = Tensor::stack(&attention_masks, 0)?;
 
     let model = macross::models::xlm_roberta::XLMRobertaModel::from_pretrained(
         (MODLE_NAME, true),
         DType::F32,
         &device,
     )?;
-
-    let encoded_inputs = tokenizer
-        .encode_batch(wine_profiles.clone(), true)
-        .map_err(E::msg)?;
-
-    let input_ids = encoded_inputs
-        .iter()
-        .map(|input| Tensor::new(input.get_ids(), &device))
-        .collect::<candle_core::Result<Vec<_>>>()?;
-    let input_ids = Tensor::stack(&input_ids, 0)?;
-
-    let type_ids = encoded_inputs
-        .iter()
-        .map(|input| Tensor::new(input.get_type_ids(), &device))
-        .collect::<candle_core::Result<Vec<_>>>()?;
-    let type_ids = Tensor::stack(&type_ids, 0)?;
-
-    let attention_masks = encoded_inputs
-        .iter()
-        .map(|input| Tensor::new(input.get_attention_mask(), &device))
-        .collect::<candle_core::Result<Vec<_>>>()?;
-    let attention_masks = Tensor::stack(&attention_masks, 0)?;
-
     let embeddings = model.forward(&input_ids, &type_ids, &attention_masks)?;
+
+    // let model =
+    //     mymodel::AutoXLMRobertaModel::from_pretrained((MODLE_NAME, true), DType::F32, &device)?;
+    //let embeddings = model.forward(&input_ids, &attention_masks, &type_ids, None, None, None)?;
+
     let embeddings = embeddings.i((.., 0))?.contiguous()?;
     let embeddings = macross::normalize(&embeddings)?;
     println!("embeddings: {:?}", embeddings.shape());

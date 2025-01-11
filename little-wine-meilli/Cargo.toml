@@ -1,0 +1,23 @@
+[package]
+name = "little-wine-meilli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+macross = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+clap = { version = "4.5.24", features = ["derive"] }
+clap_derive = "4.5.24"
+mytokenizers = { path = "../mytokenizers" }
+qwen = { path = "../qwen" }
+candle-core = { workspace = true }
+mymodel = { path = "../mymodel" }
+data = { path = "../data" }
+
+[features]
+default = []
+metal = ["qwen/metal", "mytokenizers/metal", "candle-core/metal", "mymodel/metal"]

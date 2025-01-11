@@ -14,6 +14,7 @@ pub fn tokenizer<M: Into<ModelRepo>>(model: M) -> Result<Tokenizer> {
     Ok(tokenizers::Tokenizer::from(tokenizer.to_owned()))
 }
 
+///! ouput: (ids, type_ids, attention_masks)
 pub fn encode_batch(
     tokenizer: &Tokenizer,
     texts: Vec<String>,

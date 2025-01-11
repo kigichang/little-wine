@@ -15,6 +15,7 @@ candle-nn = { workspace = true }
 candle-transformers = { workspace = true }
 reqwest = { workspace = true }
 mytokenizers = { path = "../mytokenizers" }
+mymodel = { path = "../mymodel" }
 qwen = { path = "../qwen" }
 [features]
 default = []
